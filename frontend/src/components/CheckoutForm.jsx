@@ -2,11 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import LoginModal from "./LoginModal";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+// Same intent as backend's PHONE_RE — optional leading +, then 7-15 digits once separators are stripped.
+const PHONE_RE = /^\+?\d{7,15}$/;
 
 export default function CheckoutForm() {
   const [form, setForm] = useState({ email: "", phone_number: "", shipping_address: "" });
   const [emailStatus, setEmailStatus] = useState(null); // null | 'checking' | 'valid' | 'invalid'
+  const [phoneStatus, setPhoneStatus] = useState(null); // null | 'valid' | 'invalid'
   const [recognized, setRecognized] = useState(null); // { first_name } | null
   const [showModal, setShowModal] = useState(false);
   const [modalDismissedFor, setModalDismissedFor] = useState(""); // email the user skipped login for
@@ -57,6 +60,16 @@ export default function CheckoutForm() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.email]);
 
+  // Real-time phone validation (strip spaces/dashes/parens before testing, same as backend)
+  useEffect(() => {
+    if (!form.phone_number) {
+      setPhoneStatus(null);
+      return;
+    }
+    const stripped = form.phone_number.replace(/[\s\-()]/g, "");
+    setPhoneStatus(PHONE_RE.test(stripped) ? "valid" : "invalid");
+  }, [form.phone_number]);
+
   const handleLoginSuccess = (user) => {
     setLoggedInUser(user);
     setShowModal(false);
@@ -70,6 +83,10 @@ export default function CheckoutForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    if (emailStatus === "invalid" || phoneStatus === "invalid") {
+      setError("Please fix the highlighted fields.");
+      return;
+    }
     setSubmitting(true);
     try {
       await api.submitCheckout({ ...form, was_logged_in: !!loggedInUser });
@@ -123,6 +140,9 @@ export default function CheckoutForm() {
         <div className="field">
           <label htmlFor="co-phone">Phone number</label>
           <input id="co-phone" type="tel" required value={form.phone_number} onChange={update("phone_number")} />
+          {phoneStatus === "invalid" && (
+            <div className="email-status invalid">Enter a valid phone number (7-15 digits, optional + and country code)</div>
+          )}
         </div>
         <div className="field">
           <label htmlFor="co-address">Shipping address</label>
