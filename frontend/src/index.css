@@ -226,11 +226,28 @@ h1 {
 }
 
 .code-input {
+  width: 100%;
   font-family: "JetBrains Mono", monospace;
   font-size: 22px;
   letter-spacing: 0.3em;
   text-align: center;
   padding: 12px;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.code-input:focus {
+  border-color: var(--teal);
+}
+
+.code-input::placeholder {
+  letter-spacing: 0.3em;
+  color: var(--ink-soft);
+  opacity: 0.5;
 }
 
 .modal-actions {
