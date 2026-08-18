@@ -4,3 +4,8 @@ __pycache__/
 backend/db.sqlite3
 backend/.env
 .venv/
+
+# Node
+node_modules/
+frontend/dist/
+frontend/.env
